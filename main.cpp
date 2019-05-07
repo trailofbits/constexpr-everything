@@ -17,7 +17,25 @@ using namespace clang;
 using namespace clang::tooling;
 
 namespace {
+llvm::cl::OptionCategory ConstexprCategory("constexpr-everything [-fix]");
 
+llvm::cl::extrahelp ConstexprCategoryHelp(R"(
+Use clang's existing constexpr validation code to automatically apply constexpr where appropriate
+    )");
+
+llvm::cl::opt<bool>
+    ConstExprFixItOption("fix", llvm::cl::init(false),
+                         llvm::cl::desc("apply fix-its to existing code"),
+                         llvm::cl::cat(ConstexprCategory));
+
+llvm::cl::extrahelp
+    CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
+} // namespace
+
+namespace {
+
+// These functions are stolen from clang::Sema, where they're private.
+// From lib/Sema/SemaDeclCXX.cpp
 bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
                             DeclStmt *DS, SourceLocation &Cxx1yLoc) {
   // C++11 [dcl.constexpr]p3 and p4:
@@ -125,6 +143,8 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
 // CheckConstexprParameterTypes - Check whether a function's parameter types
 // are all literal types. If so, return true. If not, produce a suitable
 // diagnostic and return false.
+
+// from lib/Sema/SemaDeclCXX.cpp
 static bool CheckConstexprParameterTypes(Sema &SemaRef,
                                          const FunctionDecl *FD) {
   unsigned ArgIndex = 0;
@@ -176,6 +196,10 @@ public:
     if (func->isMain())
       return true;
 
+    // Destructors can't be constexpr
+    if (isa<CXXDestructorDecl>(func))
+      return true;
+
     auto &sema = CI_.getSema();
 
     // Temporarily disable diagnostics for these next functions, use a
@@ -189,18 +213,19 @@ public:
       std::unique_ptr<int, decltype(returnDiagnostics)> scope(
           &lol, returnDiagnostics);
 
-      if (!sema.CheckConstexprFunctionDecl(func)) {
+      if (!sema.CheckConstexprFunctionDecl(func))
         return true;
-      }
 
-      if (!sema.CheckConstexprFunctionBody(func, func->getBody())) {
+      if (!sema.CheckConstexprFunctionBody(func, func->getBody()))
         return true;
-      }
 
-      if (!CheckConstexprParameterTypes(sema, func)) {
+      if (!CheckConstexprParameterTypes(sema, func))
         return true;
-      }
     }
+
+    SmallVector<PartialDiagnosticAt, 8> Diags;
+    if (!Expr::isPotentialConstantExpr(func, Diags))
+      return true;
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
@@ -233,44 +258,43 @@ class ConstexprVarDeclFunctionASTVisitor
         : CI_(ci), DE(ci.getASTContext().getDiagnostics()) {}
 
     bool VisitDeclStmt(clang::DeclStmt *stmt) {
-      if (!stmt->isSingleDecl()) {
+      if (!stmt->isSingleDecl())
         return true;
-      }
 
       clang::VarDecl *var =
           clang::dyn_cast<clang::VarDecl>(*stmt->decl_begin());
-      if (!var) {
+      if (!var)
         return true;
-      }
 
-      if (var->isConstexpr()) {
+      // Skip variables that are already constexpr
+      if (var->isConstexpr())
         return true;
-      }
 
       clang::SourceLocation loc = stmt->getSourceRange().getBegin();
       auto &sema = CI_.getSema();
 
+      // var needs an initializer
       Expr *Init = var->getInit();
-      if (!Init) {
+      if (!Init)
         return true;
-      }
 
-      if (!var->checkInitIsICE()) {
+      // Is init an integral constant expression
+      if (!var->checkInitIsICE())
         return true;
-      }
 
-      if (Init->isValueDependent()) {
+      // Does the init function use dependent values
+      if (Init->isValueDependent())
         return true;
-      }
 
-      if (!var->evaluateValue()) {
+      // Can we evaluate the value
+      if (!var->evaluateValue())
         return true;
-      }
 
-      if (!var->isInitICE()) {
+      // Is init an ice
+      if (!var->isInitICE())
         return true;
-      }
 
+      // Create Diagnostic/FixIt
       const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
       const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning,
                                          "variable can be constexpr");
@@ -320,18 +344,46 @@ public:
 };
 
 class FunctionDeclFrontendAction : public clang::ASTFrontendAction {
+
+  class ConstexprFixItOptions : public clang::FixItOptions {
+    std::string RewriteFilename(const std::string &Filename, int &fd) override {
+      return Filename;
+    }
+  };
+
+  std::unique_ptr<clang::FixItRewriter> rewriter = nullptr;
+  bool inPlaceRewrite;
+
 public:
+  FunctionDeclFrontendAction() : inPlaceRewrite(ConstExprFixItOption) {}
+
   std::unique_ptr<clang::ASTConsumer>
   CreateASTConsumer(clang::CompilerInstance &CI,
                     clang::StringRef file) override {
+
+    if (inPlaceRewrite) {
+      ConstexprFixItOptions fixItOptions;
+      fixItOptions.InPlace = inPlaceRewrite;
+
+      rewriter = std::make_unique<clang::FixItRewriter>(
+          CI.getDiagnostics(), CI.getASTContext().getSourceManager(),
+          CI.getASTContext().getLangOpts(), &fixItOptions);
+
+      CI.getDiagnostics().setClient(rewriter.get(), false);
+    }
+
     return std::make_unique<ConstexprEverythingASTConsumer>(
         CI); // pass CI pointer to ASTConsumer
+  }
+
+  void EndSourceFileAction() override {
+    if (inPlaceRewrite)
+      rewriter->WriteFixedFiles();
   }
 };
 
 int main(int argc, const char **argv) {
-  llvm::cl::OptionCategory MyToolCategory("constexpr-everything options");
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  CommonOptionsParser OptionsParser(argc, argv, ConstexprCategory);
 
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());

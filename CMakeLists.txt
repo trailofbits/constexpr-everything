@@ -8,9 +8,35 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wno-unused-parameter -Wall -Wextra -Wshadow -fno-strict-aliasing -fno-exceptions -fno-rtti")
 
-set(LIBRARY_LIST clangFrontend clangSerialization clangDriver clangParse clangRewriteFrontend clangStaticAnalyzerFrontend clangSema)
-set(LIBRARY_LIST ${LIBRARY_LIST} clangAnalysis clangEdit clangAST clangLex clangBasic clangTooling )
-
+set(LIBRARY_LIST
+        clangASTMatchers
+        clangTooling
+        clangDriver
+        clangAST
+        clangLex
+        clangParse
+        clangBasic
+        clangFrontend
+        clangEdit
+        clangAST
+        clangSerialization
+        clangSema
+        clangAST
+        clangAnalysis
+        clangASTMatchers
+        clangFrontendTool
+        clangDynamicASTMatchers
+        clangTooling
+        clangAST
+        clangASTMatchers
+        clangBasic
+        clangFrontend
+        clangLex
+        clangRewrite
+        clangRewriteFrontend
+        clangTooling
+        clangToolingCore
+        )
 find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
