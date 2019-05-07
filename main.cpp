@@ -278,6 +278,9 @@ class ConstexprVarDeclFunctionASTVisitor
       if (!Init)
         return true;
 
+      if (!isa<CallExpr>(Init))
+        return true;
+
       // Is init an integral constant expression
       if (!var->checkInitIsICE())
         return true;
