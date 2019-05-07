@@ -11,7 +11,6 @@ class X {
 
         //Overloaded constructor
         X(const int& val) : num(val) {
-            std::cout << "\tOverloaded Constructor: Setting num to " << val << "\n";
         }
 
         //Copy constructor
@@ -42,4 +41,6 @@ int main() {
     std::cout << "x2:\n";
     X x2;
     x2 = doSomething();
+
+    X x3(400);
 }
