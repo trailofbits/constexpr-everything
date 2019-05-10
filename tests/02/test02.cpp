@@ -16,7 +16,7 @@ class X {
         //Copy constructor
         X(const X& lVal)
             : num(lVal.num) {
-                std::cout << "\tCopy Constructor\n";
+                std::cout << "\tCopy constructor\n";
         }
 
         //Copy assignment constructor
@@ -25,6 +25,8 @@ class X {
             std::cout << "\tCopy Assignment Operator\n";
             return *this;
         }
+
+        int getNum() const { return num; }
 
 };
 
@@ -36,11 +38,18 @@ X doSomething() {
 
 int main() {
     std::cout << "x1:\n";
-    X x1 = doSomething();
+    const X x1 = doSomething();
 
     std::cout << "x2:\n";
     X x2;
     x2 = doSomething();
 
-    X x3(400);
+    const X x3(400);
+
+    std::cout << x3.getNum() << "\n";
+
+    const X x4(x3);
+    const X x5(x3);
+
+    std::cout << x4.getNum() << "\n";
 }

@@ -270,6 +270,10 @@ class ConstexprVarDeclFunctionASTVisitor
       if (var->isConstexpr())
         return true;
 
+      // Only do locals for right now
+      if (!var->hasLocalStorage())
+          return true;
+
       clang::SourceLocation loc = stmt->getSourceRange().getBegin();
       auto &sema = CI_.getSema();
 
@@ -278,8 +282,10 @@ class ConstexprVarDeclFunctionASTVisitor
       if (!Init)
         return true;
 
-      if (!isa<CallExpr>(Init))
-        return true;
+      // If the var is const we can mark it constexpr
+      QualType ty = var->getType();
+      if (!ty.isConstQualified())
+          return true;
 
       // Is init an integral constant expression
       if (!var->checkInitIsICE())
