@@ -1,5 +1,7 @@
 # constexpr-everything
 
+A libclang based project to automatically rewrite as much code as possible to be evaluated in `constexpr` contexts.
+
 ## Building
 
 ```
@@ -11,9 +13,8 @@ cmake --build .
 
 ## Usage
 
-Build a project with a compilation database, run `constexpr-everything` on the source files.
+Build a project with a [compilation database](https://clang.llvm.org/docs/JSONCompilationDatabase.html), run `constexpr-everything` on the source files.
 
 ## License
 
-Apache 2
-Copyright Trail of Bits
+constexpr-everything is licensed and distributed under the Apache 2.0 license. [Contact us](mailto:opensource@trailofbits.com) if you're looking for an exception to the terms.
