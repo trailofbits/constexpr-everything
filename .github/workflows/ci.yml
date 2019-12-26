@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
           sudo apt update
           sudo apt install llvm-9-dev libclang-9-dev
       - name: Build
