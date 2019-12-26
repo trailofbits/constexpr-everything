@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt install -y clang-format-8
       - name: Lint
-        run: clang-format -i main.cpp && git diff --exit-code
+        run: clang-format-8 -i main.cpp && git diff --exit-code
   build:
     runs-on: ubuntu-latest
     steps:
