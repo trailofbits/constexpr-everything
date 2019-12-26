@@ -3,6 +3,7 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/PartialDiagnostic.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -229,7 +230,7 @@ public:
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
-    func->setConstexpr(true);
+    func->setConstexprKind(CSK_constexpr);
 
     // Create diagnostic
     const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
