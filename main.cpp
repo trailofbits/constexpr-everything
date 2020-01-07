@@ -3,6 +3,7 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/PartialDiagnostic.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
@@ -229,7 +230,7 @@ public:
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
-    func->setConstexpr(true);
+    func->setConstexprKind(CSK_constexpr);
 
     // Create diagnostic
     const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
@@ -272,7 +273,7 @@ class ConstexprVarDeclFunctionASTVisitor
 
       // Only do locals for right now
       if (!var->hasLocalStorage())
-          return true;
+        return true;
 
       clang::SourceLocation loc = stmt->getSourceRange().getBegin();
       auto &sema = CI_.getSema();
@@ -285,7 +286,7 @@ class ConstexprVarDeclFunctionASTVisitor
       // If the var is const we can mark it constexpr
       QualType ty = var->getType();
       if (!ty.isConstQualified())
-          return true;
+        return true;
 
       // Is init an integral constant expression
       if (!var->checkInitIsICE())
