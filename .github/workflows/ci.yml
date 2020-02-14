@@ -10,14 +10,6 @@ on:
     - cron:  '0 12 * * *'
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: sudo apt install -y clang-format-8
-      - name: Lint
-        run: clang-format-8 -i main.cpp && git diff --exit-code
   build:
     runs-on: ubuntu-latest
     steps:
@@ -27,9 +19,11 @@ jobs:
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
           sudo apt update
-          sudo apt install llvm-9-dev libclang-9-dev
+          sudo apt install llvm-9-dev libclang-9-dev clang-format-9
+      - name: Lint
+        run: clang-format-9 -i main.cpp && git diff --exit-code
       - name: Build
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DLLVM_DIR=/usr/lib/llvm-9/cmake -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
