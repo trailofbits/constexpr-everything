@@ -17,9 +17,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y clang-format-8
+          sudo apt install -y clang-format
       - name: Lint
-        run: clang-format-8 -i main.cpp && git diff --exit-code
+        run: clang-format -i main.cpp && git diff --exit-code
   build:
     runs-on: ubuntu-latest
     steps:
@@ -33,5 +33,5 @@ jobs:
       - name: Build
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DLLVM_DIR=/usr/lib/cmake/llvm-9 -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
