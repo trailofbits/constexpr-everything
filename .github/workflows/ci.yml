@@ -15,7 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: sudo apt install -y clang-format-8
+        run: |
+          sudo apt update
+          sudo apt install -y clang-format-8
       - name: Lint
         run: clang-format-8 -i main.cpp && git diff --exit-code
   build:

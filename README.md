@@ -1,5 +1,7 @@
 # constexpr-everything
 
+[![Build Status](https://img.shields.io/github/workflow/status/trailofbits/constexpr-everything/CI/master)](https://github.com/trailofbits/constexpr-everything/actions?query=workflow%3ACI)
+
 A libclang based project to automatically rewrite as much code as possible to be evaluated in `constexpr` contexts.
 
 ## Building
