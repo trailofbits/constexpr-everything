@@ -217,6 +217,10 @@ public:
       if (!sema.CheckConstexprFunctionDecl(func))
         return true;
 
+      // We can't check this if we don't have a function body.
+      if (!func->getBody())
+        return true;
+
       if (!sema.CheckConstexprFunctionBody(func, func->getBody()))
         return true;
 
