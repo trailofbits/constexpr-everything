@@ -37,11 +37,16 @@ set(LIBRARY_LIST
         clangTooling
         clangToolingCore
         )
-find_package(LLVM REQUIRED CONFIG)
+
+find_package(LLVM 9.0.0 REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-include_directories(${LLVM_INCLUDE_DIRS})
+# The clang package doesn't appear to provide a version
+find_package(Clang REQUIRED CONFIG)
+message(STATUS "Using ClangConfig.cmake in: ${CLANG_CMAKE_DIR}")
+
+include_directories(${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 if(LLVM_BUILD_MAIN_SRC_DIR)
   include_directories(${LLVM_BUILD_MAIN_SRC_DIR}/tools/clang/include)
   include_directories(${LLVM_BUILD_BINARY_DIR}/tools/clang/include)
