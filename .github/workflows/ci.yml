@@ -25,5 +25,5 @@ jobs:
       - name: Build
         run: |
           mkdir build && cd build
-          cmake -DLLVM_DIR=/usr/lib/llvm-9/cmake -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DCMAKE_PREFIX_PATH="/usr/lib/llvm-9/cmake;/usr/lib/llvm-9/lib/cmake/clang" -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
