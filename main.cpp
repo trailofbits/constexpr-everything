@@ -110,8 +110,13 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
           return false;
         if (!VD->getType()->isDependentType() && !VD->hasInit() &&
             !VD->isCXXForRangeDecl()) {
+#if (LLVM_VERSION_MAJOR == 10)
+          SemaRef.Diag(VD->getLocation(), diag::ext_constexpr_local_var_no_init)
+              << isa<CXXConstructorDecl>(Dcl);
+#else
           SemaRef.Diag(VD->getLocation(), diag::err_constexpr_local_var_no_init)
               << isa<CXXConstructorDecl>(Dcl);
+#endif
           return false;
         }
       }
@@ -214,8 +219,14 @@ public:
       std::unique_ptr<int, decltype(returnDiagnostics)> scope(
           &lol, returnDiagnostics);
 
+#if (LLVM_VERSION_MAJOR == 10)
+      if (!sema.CheckConstexprFunctionDefinition(
+              func, Sema::CheckConstexprKind::CheckValid))
+        return true;
+#else
       if (!sema.CheckConstexprFunctionDecl(func))
         return true;
+#endif
 
       // We can't check this if we don't have a function body.
       if (!func->getBody())

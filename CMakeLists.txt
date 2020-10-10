@@ -38,9 +38,14 @@ set(LIBRARY_LIST
         clangToolingCore
         )
 
-find_package(LLVM 9.0 REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+if((${LLVM_PACKAGE_VERSION} VERSION_LESS "9.0.0")
+  AND (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL  "11"))
+  message(FATAL_ERROR "Only LLVM 9 and 10 are supported.")
+endif()
 
 # The clang package doesn't appear to provide a version
 find_package(Clang REQUIRED CONFIG)
