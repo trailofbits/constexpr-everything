@@ -25,23 +25,13 @@ set(LIBRARY_LIST
         clangBasic
         clangFrontend
         clangEdit
-        clangAST
         clangSerialization
         clangSema
-        clangAST
         clangAnalysis
-        clangASTMatchers
         clangFrontendTool
         clangDynamicASTMatchers
-        clangTooling
-        clangAST
-        clangASTMatchers
-        clangBasic
-        clangFrontend
-        clangLex
         clangRewrite
         clangRewriteFrontend
-        clangTooling
         clangToolingCore
         )
 
