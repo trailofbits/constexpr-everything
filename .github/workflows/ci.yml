@@ -30,11 +30,14 @@ jobs:
 
       - name: deps
         run: |
-          sudo apt autoremove -f "libclang*-dev"
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{ matrix.llvm-toolchain }} main"
           sudo apt update
-          sudo apt install llvm-${{ matrix.llvm-toolchain }}-dev libclang-${{ matrix.llvm-toolchain }}-dev
+          sudo apt install \
+            llvm-${{ matrix.llvm-toolchain }} \
+            llvm-${{ matrix.llvm-toolchain }}-dev \
+            clang-${{ matrix.llvm-toolchain }} \
+            libclang-${{ matrix.llvm-toolchain }}-dev
 
       - name: build
         run: |
