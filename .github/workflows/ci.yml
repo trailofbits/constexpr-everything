@@ -28,14 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install dependencies
+      - name: deps
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{ matrix.llvm-toolchain }} main"
           sudo apt update
-          sudo apt install llvm-${{ matrix.llvm-toolchain }}-dev libclang-${{ matrix.llvm-toolchain }}-dev clang-format-${{ matrix.llvm-toolchain }}
+          sudo apt install llvm-${{ matrix.llvm-toolchain }}-dev libclang-${{ matrix.llvm-toolchain }}-dev
 
-      - name: Build
+      - name: build
         run: |
           mkdir build && cd build
           cmake -DCMAKE_PREFIX_PATH="/usr/lib/llvm-${{ matrix.llvm-toolchain }}/cmake;/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang" -DCMAKE_BUILD_TYPE=Debug ..
