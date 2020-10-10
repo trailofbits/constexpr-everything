@@ -38,5 +38,5 @@ jobs:
       - name: build
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DCMAKE_PREFIX_PATH="/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang" -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
