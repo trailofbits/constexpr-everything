@@ -219,7 +219,7 @@ public:
       std::unique_ptr<int, decltype(returnDiagnostics)> scope(
           &lol, returnDiagnostics);
 
-#if (LLVM_VERSION_MAJOR == 10)
+#if LLVM_VERSION_MAJOR >= 10
       if (!sema.CheckConstexprFunctionDefinition(
               func, Sema::CheckConstexprKind::CheckValid))
         return true;
@@ -232,8 +232,10 @@ public:
       if (!func->getBody())
         return true;
 
+#if LLVM_VERSION_MAJOR <= 9
       if (!sema.CheckConstexprFunctionBody(func, func->getBody()))
         return true;
+#endif
 
       if (!CheckConstexprParameterTypes(sema, func))
         return true;
