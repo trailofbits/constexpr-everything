@@ -10,20 +10,33 @@ on:
     - cron:  '0 12 * * *'
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: deps
+        run: sudo apt install clang-format-9
+
+      - name: lint
+        run: clang-format-9 -i main.cpp && git diff --exit-code
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        llvm-toolchain: [9, 10]
+    steps:
+      - uses: actions/checkout@v2
+
       - name: Install dependencies
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main"
+          sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{ matrix.llvm-toolchain }} main"
           sudo apt update
-          sudo apt install llvm-9-dev libclang-9-dev clang-format-9
-      - name: Lint
-        run: clang-format-9 -i main.cpp && git diff --exit-code
+          sudo apt install llvm-${{ matrix.llvm-toolchain }}-dev libclang-${{ matrix.llvm-toolchain }}-dev clang-format-${{ matrix.llvm-toolchain }}
+
       - name: Build
         run: |
           mkdir build && cd build
-          cmake -DCMAKE_PREFIX_PATH="/usr/lib/llvm-9/cmake;/usr/lib/llvm-9/lib/cmake/clang" -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DCMAKE_PREFIX_PATH="/usr/lib/llvm-${{ matrix.llvm-toolchain }}/cmake;/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang" -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
