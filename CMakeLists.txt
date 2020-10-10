@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wno-unused-parameter -Wall -fno-strict-aliasing -fno-exceptions -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wall -fno-strict-aliasing -fno-exceptions -fno-rtti")
 
 # NOTE(ww): When multiple versions of libclang are installed, CMake gets confused
 # and picks the wrong (usually old) one. These settings tell it to assume a natural

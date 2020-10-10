@@ -30,6 +30,7 @@ jobs:
 
       - name: deps
         run: |
+          sudo apt autoremove -f "libclang*-dev"
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{ matrix.llvm-toolchain }} main"
           sudo apt update
