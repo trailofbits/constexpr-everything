@@ -42,8 +42,8 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 if((${LLVM_PACKAGE_VERSION} VERSION_LESS "9.0.0")
-   OR (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "11"))
-  message(FATAL_ERROR "Only LLVM 9 and 10 are supported.")
+   OR (${LLVM_PACKAGE_VERSION} VERSION_GREATER "11"))
+  message(FATAL_ERROR "Only LLVM 9, 10, and 11 are supported.")
 endif()
 
 # The clang package doesn't appear to provide a version
