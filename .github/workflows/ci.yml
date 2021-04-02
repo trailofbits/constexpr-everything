@@ -41,6 +41,7 @@ jobs:
 
       - name: build
         run: |
+          export LLVM_DIR=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/cmake
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Debug ..
           cmake --build .
