@@ -31,7 +31,7 @@ jobs:
       - name: deps
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${{ matrix.llvm-toolchain }} main"
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ matrix.llvm-toolchain }} main"
           sudo apt update
           sudo apt install \
             llvm-${{ matrix.llvm-toolchain }} \
