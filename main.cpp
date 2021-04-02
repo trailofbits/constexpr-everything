@@ -110,7 +110,7 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
           return false;
         if (!VD->getType()->isDependentType() && !VD->hasInit() &&
             !VD->isCXXForRangeDecl()) {
-#if (LLVM_VERSION_MAJOR == 10)
+#if (LLVM_VERSION_MAJOR >= 10)
           SemaRef.Diag(VD->getLocation(), diag::ext_constexpr_local_var_no_init)
               << isa<CXXConstructorDecl>(Dcl);
 #else
