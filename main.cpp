@@ -306,7 +306,7 @@ class ConstexprVarDeclFunctionASTVisitor
         return true;
 
       // Is init an integral constant expression
-      if (!var->hasICEInitializer(stmt->getASTContext()))
+      if (!var->hasICEInitializer(stmt->getSingleDecl()->getASTContext()))
         return true;
 
       // Does the init function use dependent values
