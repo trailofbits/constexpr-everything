@@ -247,7 +247,7 @@ public:
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
-    func->setConstexprKind(clang::ConstexprSpecKind::Constexpr);
+    func->setConstexprKind(CSK_constexpr);
 
     // Create diagnostic
     const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
@@ -306,7 +306,7 @@ class ConstexprVarDeclFunctionASTVisitor
         return true;
 
       // Is init an integral constant expression
-      if (!var->hasICEInitializer(stmt->getSingleDecl()->getASTContext()))
+      if (!var->checkInitIsICE())
         return true;
 
       // Does the init function use dependent values
@@ -317,9 +317,9 @@ class ConstexprVarDeclFunctionASTVisitor
       if (!var->evaluateValue())
         return true;
 
-      // // Is init an ice
-      // if (!var->isInitICE())
-      //   return true;
+      // Is init an ice
+      if (!var->isInitICE())
+        return true;
 
       // Create Diagnostic/FixIt
       const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
