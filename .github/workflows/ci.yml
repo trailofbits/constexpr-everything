@@ -21,7 +21,7 @@ jobs:
       - name: lint
         run: clang-format-9 -i main.cpp && git diff --exit-code
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         llvm-toolchain: [9, 10, 11]
