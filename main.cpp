@@ -235,6 +235,9 @@ public:
 #if LLVM_VERSION_MAJOR <= 9
       if (!sema.CheckConstexprFunctionBody(func, func->getBody()))
         return true;
+#elif LLVM_VERSION_MAJOR == 13
+      if(!sema.CheckConstexprFunctionDefinition(func, Sema::CheckConstexprKind::CheckValid))
+        return true;
 #endif
 
       if (!CheckConstexprParameterTypes(sema, func))
@@ -247,7 +250,11 @@ public:
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
+#if LLVM_VERSION_MAJOR == 13
+    func->setConstexprKind(ConstexprSpecKind::Constexpr);
+#else
     func->setConstexprKind(CSK_constexpr);
+#endif
 
     // Create diagnostic
     const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
@@ -305,9 +312,12 @@ class ConstexprVarDeclFunctionASTVisitor
       if (!ty.isConstQualified())
         return true;
 
+#if LLVM_VERSION_MAJOR != 13
       // Is init an integral constant expression
       if (!var->checkInitIsICE())
         return true;
+      }
+#endif
 
       // Does the init function use dependent values
       if (Init->isValueDependent())
@@ -317,9 +327,17 @@ class ConstexprVarDeclFunctionASTVisitor
       if (!var->evaluateValue())
         return true;
 
+#if LLVM_VERSION_MAJOR == 13
+      if(!var->hasConstantInitialization())
+        return true;
+
+      if (!var->hasICEInitializer(CI_.getASTContext()))
+        return true;
+#else
       // Is init an ice
       if (!var->isInitICE())
         return true;
+#endif
 
       // Create Diagnostic/FixIt
       const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
@@ -410,7 +428,18 @@ public:
 };
 
 int main(int argc, const char **argv) {
+
+#if LLVM_VERSION_MAJOR == 13
+  auto ExpectedParser = CommonOptionsParser::create(argc, argv, ConstexprCategory);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser& OptionsParser = ExpectedParser.get();
+#else
   CommonOptionsParser OptionsParser(argc, argv, ConstexprCategory);
+
+#endif
 
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
