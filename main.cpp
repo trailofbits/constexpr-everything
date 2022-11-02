@@ -316,7 +316,6 @@ class ConstexprVarDeclFunctionASTVisitor
       // Is init an integral constant expression
       if (!var->checkInitIsICE())
         return true;
-      }
 #endif
 
       // Does the init function use dependent values
