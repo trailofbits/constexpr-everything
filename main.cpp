@@ -35,26 +35,6 @@ namespace {
 // These functions are stolen from clang::Sema, where they're private.
 // From lib/Sema/SemaDeclCXX.cpp
 
-/// Check that the given type is a literal type. Issue a diagnostic if not,
-/// if Kind is Diagnose.
-/// \return \c true if a problem has been found (and optionally diagnosed).
-template <typename... Ts>
-static bool CheckLiteralType(Sema& SemaRef, Sema::CheckConstexprKind Kind, SourceLocation Loc, QualType T, unsigned DiagID, Ts&&... DiagArgs) {
-  if (T->isDependentType()) {
-    return false;
-  }
-
-  switch (Kind) {
-    case Sema::CheckConstexprKind::Diagnose:
-      return SemaRef.RequireLiteralType(Loc, T, DiagID, std::forward<Ts>(DiagArgs)...);
-
-    case Sema::CheckConstexprKind::CheckValid:
-      return !T->isLiteralType(SemaRef.Context);
-  }
-
-  llvm_unreachable("unknown CheckConstexprKind");
-}
-
 // CheckConstexprParameterTypes - Check whether a function's parameter types
 // are all literal types. If so, return true. If not, produce a suitable
 // diagnostic and return false.
