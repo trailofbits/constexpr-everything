@@ -204,7 +204,8 @@ class ConstexprVarDeclFunctionASTVisitor : public clang::RecursiveASTVisitor<Con
 
       // Is init an integral constant expression
 #if LLVM_VERSION_MAJOR >= 12
-      if (!var->hasICEInitializer(stmt->getSingleDecl()->getASTContext())) {
+      if (!var->hasICEInitializer(CI_.getASTContext())) {
+        //if (!var->hasICEInitializer(stmt->getSingleDecl()->getASTContext())) {
 #else
       if (!var->checkInitIsICE()) {
 #endif
