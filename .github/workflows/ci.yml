@@ -46,6 +46,7 @@ jobs:
 
   build:
     runs-on: ubuntu-20.04
+    name: Ubuntu Clang ${{ matrix.llvm-toolchain }}
     strategy:
       # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
       fail-fast: false
@@ -82,6 +83,7 @@ jobs:
 
   build-mac:
     runs-on: macos-latest
+    name: MacOS Clang 15
     steps:
       - uses: actions/checkout@v3
 
