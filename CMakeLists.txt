@@ -41,8 +41,9 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-if((${LLVM_PACKAGE_VERSION} VERSION_LESS "9.0.0")
+if(((${LLVM_PACKAGE_VERSION} VERSION_LESS "9.0.0")
    OR (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "12"))
+   AND (NOT (${LLVM_PACKAGE_VERSION} VERSION_EQUAL "13")))
   message(FATAL_ERROR "Only LLVM 9 through 11 are supported.")
 endif()
 
