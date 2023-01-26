@@ -74,12 +74,11 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
     case Decl::Enum:
     case Decl::CXXRecord:
       // C++1y allows types to be defined, not just declared.
-      if (cast<TagDecl>(DclIt)->isThisDeclarationADefinition())
+      if (cast<TagDecl>(DclIt)->isThisDeclarationADefinition()) {
         SemaRef.Diag(DS->getBeginLoc(),
-                     SemaRef.getLangOpts().CPlusPlus14
-                         ? diag::warn_cxx11_compat_constexpr_type_definition
-                         : diag::ext_constexpr_type_definition)
-            << isa<CXXConstructorDecl>(Dcl);
+                     SemaRef.getLangOpts().CPlusPlus14 ? diag::warn_cxx11_compat_constexpr_type_definition : diag::ext_constexpr_type_definition)
+          << isa<CXXConstructorDecl>(Dcl);
+      }
       continue;
 
     case Decl::EnumConstant:
@@ -97,17 +96,15 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
       const auto *VD = cast<VarDecl>(DclIt);
       if (VD->isThisDeclarationADefinition()) {
         if (VD->isStaticLocal()) {
-          SemaRef.Diag(VD->getLocation(), diag::err_constexpr_local_var_static)
-              << isa<CXXConstructorDecl>(Dcl)
-              << (VD->getTLSKind() == VarDecl::TLS_Dynamic);
+          SemaRef.Diag(VD->getLocation(), diag::ext_constexpr_local_var_no_init)
+            << isa<CXXConstructorDecl>(Dcl) << (VD->getTLSKind() == VarDecl::TLS_Dynamic);
           return false;
         }
-        if (!VD->getType()->isDependentType() &&
-            SemaRef.RequireLiteralType(
-                VD->getLocation(), VD->getType(),
-                diag::err_constexpr_local_var_non_literal_type,
-                isa<CXXConstructorDecl>(Dcl)))
+        if (!VD->getType()->isDependentType()
+            && SemaRef.RequireLiteralType(VD->getLocation(), VD->getType(), diag::err_constexpr_local_var_non_literal_type,
+                                          isa<CXXConstructorDecl>(Dcl))) {
           return false;
+        }
         if (!VD->getType()->isDependentType() && !VD->hasInit() &&
             !VD->isCXXForRangeDecl()) {
 #if (LLVM_VERSION_MAJOR >= 10)
@@ -132,8 +129,9 @@ bool CheckConstexprDeclStmt(Sema &SemaRef, const FunctionDecl *Dcl,
     case Decl::Function:
       // These are disallowed in C++11 and permitted in C++1y. Allow them
       // everywhere as an extension.
-      if (!Cxx1yLoc.isValid())
+      if (!Cxx1yLoc.isValid()) {
         Cxx1yLoc = DS->getBeginLoc();
+      }
       continue;
 
     default:
@@ -160,11 +158,11 @@ static bool CheckConstexprParameterTypes(Sema &SemaRef,
        i != e; ++i, ++ArgIndex) {
     const ParmVarDecl *PD = FD->getParamDecl(ArgIndex);
     SourceLocation ParamLoc = PD->getLocation();
-    if (!(*i)->isDependentType() &&
-        SemaRef.RequireLiteralType(
-            ParamLoc, *i, diag::err_constexpr_non_literal_param, ArgIndex + 1,
-            PD->getSourceRange(), isa<CXXConstructorDecl>(FD)))
-      return false;
+    if (!(*i)->isDependentType()
+        && SemaRef.RequireLiteralType(ParamLoc, *i, diag::err_constexpr_non_literal_param, ArgIndex + 1, PD->getSourceRange(),
+                                      isa<CXXConstructorDecl>(FD))) {
+    return false;
+    }
   }
   return true;
 }
@@ -191,20 +189,24 @@ public:
 
     // Only functions in our TU
     SourceLocation loc = func->getSourceRange().getBegin();
-    if (!sourceManager_.isWrittenInMainFile(loc))
-      return true;
+    if (!sourceManager_.isWrittenInMainFile(loc)) {
+    return true;
+    }
 
     // Skip existing constExpr functions
-    if (func->isConstexpr())
-      return true;
+    if (func->isConstexpr()) {
+    return true;
+    }
 
     // Don't mark main as constexpr
-    if (func->isMain())
-      return true;
+    if (func->isMain()) {
+    return true;
+    }
 
     // Destructors can't be constexpr
-    if (isa<CXXDestructorDecl>(func))
-      return true;
+    if (isa<CXXDestructorDecl>(func)) {
+    return true;
+    }
 
     auto &sema = CI_.getSema();
 
@@ -220,30 +222,33 @@ public:
           &lol, returnDiagnostics);
 
 #if LLVM_VERSION_MAJOR >= 10
-      if (!sema.CheckConstexprFunctionDefinition(
-              func, Sema::CheckConstexprKind::CheckValid))
-        return true;
+      if (!sema.CheckConstexprFunctionDefinition(func, Sema::CheckConstexprKind::CheckValid)) {
+      return true;
+      }
 #else
       if (!sema.CheckConstexprFunctionDecl(func))
         return true;
 #endif
 
       // We can't check this if we don't have a function body.
-      if (!func->getBody())
-        return true;
+      if (!func->getBody()) {
+      return true;
+      }
 
 #if LLVM_VERSION_MAJOR <= 9
       if (!sema.CheckConstexprFunctionBody(func, func->getBody()))
         return true;
 #endif
 
-      if (!CheckConstexprParameterTypes(sema, func))
-        return true;
+      if (!CheckConstexprParameterTypes(sema, func)) {
+      return true;
+      }
     }
 
     SmallVector<PartialDiagnosticAt, 8> Diags;
-    if (!Expr::isPotentialConstantExpr(func, Diags))
+    if (!Expr::isPotentialConstantExpr(func, Diags)) {
       return true;
+    }
 
     // Mark function as constexpr, the next ast visitor will use this
     // information to find constexpr vardecls
@@ -276,50 +281,60 @@ class ConstexprVarDeclFunctionASTVisitor
         : CI_(ci), DE(ci.getASTContext().getDiagnostics()) {}
 
     bool VisitDeclStmt(clang::DeclStmt *stmt) {
-      if (!stmt->isSingleDecl())
-        return true;
+      if (!stmt->isSingleDecl()) {
+      return true;
+      }
 
       clang::VarDecl *var =
           clang::dyn_cast<clang::VarDecl>(*stmt->decl_begin());
-      if (!var)
-        return true;
+      if (!var) {
+      return true;
+      }
 
       // Skip variables that are already constexpr
-      if (var->isConstexpr())
-        return true;
+      if (var->isConstexpr()) {
+      return true;
+      }
 
       // Only do locals for right now
-      if (!var->hasLocalStorage())
-        return true;
+      if (!var->hasLocalStorage()) {
+      return true;
+      }
 
       clang::SourceLocation loc = stmt->getSourceRange().getBegin();
       auto &sema = CI_.getSema();
 
       // var needs an initializer
       Expr *Init = var->getInit();
-      if (!Init)
-        return true;
+      if (!Init) {
+      return true;
+      }
 
       // If the var is const we can mark it constexpr
       QualType ty = var->getType();
-      if (!ty.isConstQualified())
-        return true;
+      if (!ty.isConstQualified()) {
+      return true;
+      }
 
       // Is init an integral constant expression
-      if (!var->checkInitIsICE())
-        return true;
+      if (!var->checkInitIsICE()) {
+      return true;
+      }
 
       // Does the init function use dependent values
-      if (Init->isValueDependent())
-        return true;
+      if (Init->isValueDependent()) {
+      return true;
+      }
 
       // Can we evaluate the value
-      if (!var->evaluateValue())
-        return true;
+      if (!var->evaluateValue()) {
+      return true;
+      }
 
       // Is init an ice
-      if (!var->isInitICE())
-        return true;
+      if (!var->isInitICE()) {
+      return true;
+      }
 
       // Create Diagnostic/FixIt
       const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
@@ -340,12 +355,14 @@ public:
   bool VisitFunctionDecl(clang::FunctionDecl *func) {
     // Only functions in our TU
     SourceLocation loc = func->getSourceRange().getBegin();
-    if (!sourceManager_.isWrittenInMainFile(loc))
+    if (!sourceManager_.isWrittenInMainFile(loc)) {
       return true;
+    }
 
     // Don't go through functions that are already constexpr
-    if (func->isConstexpr())
+    if (func->isConstexpr()) {
       return true;
+    }
 
     ConstexprVarDeclVisitor vd(CI_);
     vd.TraverseFunctionDecl(func);
@@ -404,8 +421,9 @@ public:
   }
 
   void EndSourceFileAction() override {
-    if (inPlaceRewrite)
+    if (inPlaceRewrite) {
       rewriter->WriteFixedFiles();
+    }
   }
 };
 
