@@ -19,7 +19,31 @@ jobs:
         run: sudo apt install clang-format-14
 
       - name: lint
-        run: clang-format-14 -i main.cpp && git diff --exit-code
+        run: |
+          clang-format-14 -style=file -i main.cpp
+          # clang-format will auto correct files so prepare the diff and use this as artifact
+          git diff > clang_format.patch
+
+          # Delete if nothing otherwise exit 1 to indicate a failed job
+          if [ ! -s clang_format.patch ]
+          then
+            rm clang_format.patch
+            exit 0
+          else
+            echo "clang-format auto corrected files:"
+            git diff --name-only
+            echo -e "\nPlease correct these files. Patch is uploaded as an artifact for convenience."
+            exit 1
+          fi
+          # git diff --exit-code
+
+      - name: Upload clang-format patch as artifact
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+            name: constexpr-everything-clang_format.patch
+            path: clang_format.patch
+
   build:
     runs-on: ubuntu-20.04
     strategy:
@@ -28,9 +52,10 @@ jobs:
       matrix:
         llvm-toolchain: [9, 10, 11, 12, 13, 14, 15]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: deps
+        shell: bash
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ matrix.llvm-toolchain }} main"
@@ -42,9 +67,34 @@ jobs:
             libclang-${{ matrix.llvm-toolchain }}-dev
 
       - name: build
+        shell: bash
         run: |
-          export LLVM_DIR=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/llvm
-          export Clang_DIR=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang
           mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DLLVM_DIR:PATH=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/llvm \
+                -DClang_DIR:PATH=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang ..
           cmake --build .
+
+      - name: Archive binary artifacts
+        uses: actions/upload-artifact@v3
+        with:
+            name: constexpr-everything-ubuntu-clang${{ matrix.llvm-toolchain }}
+            path: build/constexpr-everything
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: build
+        shell: bash
+        run: |
+          mkdir build && cd build
+          cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DLLVM_DIR:PATH=$(brew --prefix llvm@15)/lib/cmake/llvm \
+                -DClang_DIR:PATH=$(brew --prefix llvm@15)/lib/cmake/clang ..
+          cmake --build .
+
+      - name: Archive binary artifacts
+        uses: actions/upload-artifact@v3
+        with:
+            name: constexpr-everything-mac
+            path: build/constexpr-everything
