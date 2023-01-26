@@ -75,6 +75,12 @@ jobs:
                 -DClang_DIR:PATH=/usr/lib/llvm-${{ matrix.llvm-toolchain }}/lib/cmake/clang ..
           cmake --build .
 
+      - name: Test the binary
+        working-directory: build/
+        shell: bash
+        run: |
+          ./constexpr-everything -p . ../main.cpp
+
       - name: Archive binary artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -94,6 +100,12 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DLLVM_DIR:PATH=$(brew --prefix llvm@15)/lib/cmake/llvm \
                 -DClang_DIR:PATH=$(brew --prefix llvm@15)/lib/cmake/clang ..
           cmake --build .
+
+      - name: Test the binary
+        working-directory: build/
+        shell: bash
+        run: |
+          ./constexpr-everything -p . ../main.cpp
 
       - name: Archive binary artifacts
         uses: actions/upload-artifact@v3
