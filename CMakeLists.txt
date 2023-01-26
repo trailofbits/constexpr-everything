@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(constexpr-everything CXX)
+project(constexpr-everything CXX C)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,8 +42,8 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 if((${LLVM_PACKAGE_VERSION} VERSION_LESS "9.0.0")
-   OR (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "12"))
-  message(FATAL_ERROR "Only LLVM 9 through 11 are supported.")
+   OR (${LLVM_PACKAGE_VERSION} VERSION_GREATER_EQUAL "16"))
+  message(FATAL_ERROR "Only LLVM 9 through 15 are supported.")
 endif()
 
 # The clang package doesn't appear to provide a version
