@@ -124,6 +124,10 @@ class ConstexprFunctionASTVisitor : public clang::RecursiveASTVisitor<ConstexprF
       if (!sema.CheckConstexprFunctionBody(func, func->getBody())) {
         return true;
       }
+#elif LLVM_VERSION_MAJOR >= 12
+      if (!sema.CheckConstexprFunctionDefinition(func, Sema::CheckConstexprKind::CheckValid)) {
+        return true;
+      }
 #endif
 
       if (!CheckConstexprParameterTypes(sema, func)) {
@@ -141,8 +145,9 @@ class ConstexprFunctionASTVisitor : public clang::RecursiveASTVisitor<ConstexprF
 #if LLVM_VERSION_MAJOR >= 12
     func->setConstexprKind(clang::ConstexprSpecKind::Constexpr);
 #else
-    func->setConstexprKind(CSK_unspecified);
+    func->setConstexprKind(CSK_constexpr);
 #endif
+
     // Create diagnostic
     const auto FixIt = clang::FixItHint::CreateInsertion(loc, "constexpr ");
     const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "function can be constexpr");
