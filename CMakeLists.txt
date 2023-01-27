@@ -65,11 +65,4 @@ target_link_libraries(${PROJECT_NAME} ${LIBRARY_LIST})
 
 target_link_libraries(
   ${PROJECT_NAME}
-  LLVMTransformUtils
-  LLVMAnalysis
-  LLVMTarget
-  LLVMOption # Support
-  LLVMObject # BitReader, Core, Support
-  LLVMBitReader # Core, Support
-  LLVMCore # Support
-  LLVMSupport)
+  LLVM)
